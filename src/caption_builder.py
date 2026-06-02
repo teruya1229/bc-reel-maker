@@ -35,12 +35,17 @@ def build_captions(
 
     subtitle_line = f"{subtitle}\n" if subtitle else ""
 
+    instagram_cta = "気になる方は、LINEでお気軽にご相談ください。"
+    youtube_cta = "気になる方はLINEで無料相談できます。"
+    tiktok_cta = "気になる方はLINEで相談OKです。"
+
     instagram = (
         f"{ig_intro}\n"
         f"{title}\n"
         f"{subtitle_line}"
         "不安を煽らず、必要な施工を丁寧にご案内します。\n\n"
         f"{cta}\n"
+        f"{instagram_cta}\n"
         f"LINE相談はこちら: {line_url}\n"
         f"{hashtags}".strip()
     )
@@ -50,7 +55,8 @@ def build_captions(
         "説明文:\n"
         f"{yt_intro}\n"
         f"{subtitle if subtitle else '室内の空気環境をやさしく整えるお手伝いをしています。'}\n"
-        f"{cta}\n\n"
+        f"{cta}\n"
+        f"{youtube_cta}\n\n"
         "タグ候補:\n"
         "#エアコンクリーニング #沖縄 #家族の空気 #BCサービス"
     )
@@ -60,6 +66,7 @@ def build_captions(
         f"{title}\n"
         f"{subtitle if subtitle else '毎日使うエアコンの風を見直しませんか。'}\n"
         f"{cta}\n"
+        f"{tiktok_cta}\n"
         f"LINE相談: {line_url}\n"
         "#沖縄 #エアコンクリーニング #子育て家庭"
     )

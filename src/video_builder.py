@@ -11,12 +11,16 @@ from src.utils import escape_drawtext, is_image_file
 VIDEO_W = 1080
 VIDEO_H = 1920
 FPS = 30
+CTA_SLIDE_DURATION = 3.0
 
 
 def _run_ffmpeg(command: list[str]) -> None:
-    proc = subprocess.run(command, capture_output=True, text=True)
+    proc = subprocess.run(command, capture_output=True)
     if proc.returncode != 0:
-        raise RuntimeError(proc.stderr.strip() or "ffmpeg の実行に失敗しました。")
+        stderr_text = (proc.stderr or b"").decode("utf-8", errors="ignore").strip()
+        if not stderr_text:
+            stderr_text = (proc.stderr or b"").decode("cp932", errors="ignore").strip()
+        raise RuntimeError(stderr_text or "ffmpeg の実行に失敗しました。")
 
 
 def _build_timeline(media_paths: list[Path]) -> list[Path]:
@@ -86,17 +90,46 @@ def _make_segment(src: Path, dst: Path, duration: float) -> None:
     _run_ffmpeg(command)
 
 
-def _make_cta_slide(path: Path, cta: str, brand_name: str, duration: float = 4.0) -> None:
-    text_main = escape_drawtext(cta)
+def _resolve_cta_lines(cta: str) -> tuple[str, str]:
+    cleaned = (cta or "").strip()
+    default_cta = "気になる方はLINEで無料相談"
+    if not cleaned:
+        cleaned = default_cta
+    if "\n" in cleaned:
+        parts = [line.strip() for line in cleaned.splitlines() if line.strip()]
+        if len(parts) >= 2:
+            return parts[0], parts[1]
+    if cleaned == default_cta:
+        return "気になる方は", "LINEで無料相談"
+    return cleaned, ""
+
+
+def _make_cta_slide(path: Path, cta: str, brand_name: str, duration: float = CTA_SLIDE_DURATION) -> None:
+    main_1, main_2 = _resolve_cta_lines(cta)
+    text_main_1 = escape_drawtext(main_1)
+    text_main_2 = escape_drawtext(main_2)
     text_brand = escape_drawtext(brand_name)
+    text_sub = escape_drawtext("家族が吸う空気を見直すきっかけに")
     fontfile = "C\\:/Windows/Fonts/meiryo.ttc"
     vf = (
         "color=c=#F6F2EA:s=1080x1920:d={dur}[bg];"
-        "[bg]drawtext=fontfile='{font}':text='{main}':fontcolor=white:fontsize=62:"
-        "x=(w-text_w)/2:y=(h-text_h)/2-30:shadowx=2:shadowy=2:shadowcolor=black@0.35,"
+        "[bg]drawbox=x=iw*0.24:y=ih*0.47:w=iw*0.52:h=5:color=#F5D66C@0.95:t=fill,"
+        "drawtext=fontfile='{font}':text='{main1}':fontcolor=#4A4A4A:fontsize=66:"
+        "x=(w-text_w)/2:y=(h-text_h)/2-95:shadowx=2:shadowy=2:shadowcolor=black@0.20,"
+        "drawtext=fontfile='{font}':text='{main2}':fontcolor=#4A4A4A:fontsize=70:"
+        "x=(w-text_w)/2:y=(h-text_h)/2-10:shadowx=2:shadowy=2:shadowcolor=black@0.20,"
         "drawtext=fontfile='{font}':text='{brand}':fontcolor=white:fontsize=42:"
-        "x=(w-text_w)/2:y=(h-text_h)/2+80:shadowx=2:shadowy=2:shadowcolor=black@0.35"
-    ).format(dur=duration, font=fontfile, main=text_main, brand=text_brand)
+        "x=(w-text_w)/2:y=(h-text_h)/2+90:shadowx=2:shadowy=2:shadowcolor=black@0.35,"
+        "drawtext=fontfile='{font}':text='{sub}':fontcolor=#6B6B6B:fontsize=36:"
+        "x=(w-text_w)/2:y=h*0.84"
+    ).format(
+        dur=duration,
+        font=fontfile,
+        main1=text_main_1,
+        main2=text_main_2,
+        brand=text_brand,
+        sub=text_sub,
+    )
 
     _run_ffmpeg(
         [
@@ -157,7 +190,7 @@ def _overlay_and_mix(
         "x=(w-text_w)/2:y=h*0.72:enable='between(t,9,14)'[vt]"
     )
 
-    command: list[str] = ["ffmpeg", "-y", "-i", str(src_video), "-i", str(bgm_path)]
+    command: list[str] = ["ffmpeg", "-y", "-i", str(src_video), "-stream_loop", "-1", "-i", str(bgm_path)]
 
     if character_path:
         command.extend(["-i", str(character_path)])
@@ -188,7 +221,8 @@ def _overlay_and_mix(
             "aac",
             "-pix_fmt",
             "yuv420p",
-            "-shortest",
+            "-t",
+            f"{duration:.2f}",
             str(output_path),
         ]
     )
@@ -215,13 +249,13 @@ def build_reel_video(
         segments.append(segment_path)
 
     cta_path = work_dir / "cta.mp4"
-    _make_cta_slide(cta_path, cta_text, brand_name, duration=4.0)
+    _make_cta_slide(cta_path, cta_text, brand_name, duration=CTA_SLIDE_DURATION)
     segments.append(cta_path)
 
     stitched = work_dir / "stitched.mp4"
     _concat_videos(segments, stitched, work_dir)
 
-    total_duration = len(timeline) * seg_duration + 4.0
+    total_duration = len(timeline) * seg_duration + CTA_SLIDE_DURATION
     _overlay_and_mix(
         src_video=stitched,
         bgm_path=bgm_path,

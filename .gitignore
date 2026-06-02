@@ -15,3 +15,4 @@ Thumbs.db
 sample_assets/test_*
 sample_assets/_generated_test_*
 sample_assets/*.tmp
+real_assets/
