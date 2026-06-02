@@ -12,3 +12,6 @@ venv/
 Thumbs.db
 
 .streamlit/secrets.toml
+sample_assets/test_*
+sample_assets/_generated_test_*
+sample_assets/*.tmp
