@@ -117,6 +117,7 @@ if submit:
             title=title,
             subtitle=subtitle,
             brand_name=brand_config["brand_name"],
+            background_image_path=media_paths[0] if media_paths else None,
         )
 
         reel_path = output_dir / "reel.mp4"
@@ -139,6 +140,7 @@ if submit:
             title=title,
             subtitle=subtitle,
             cta=used_cta,
+            theme_name=theme,
         )
 
         for filename, body in caption_files.items():

@@ -179,16 +179,24 @@ def _overlay_and_mix(
     character_path: Path | None,
 ) -> None:
     fontfile = "C\\:/Windows/Fonts/meiryo.ttc"
-    bubble1 = escape_drawtext(bubbles[0]) if bubbles else ""
-    bubble2 = escape_drawtext(bubbles[1]) if len(bubbles) > 1 else ""
+    def _compact(text: str) -> str:
+        cleaned = (text or "").replace("。", "").replace("、", "").strip()
+        if len(cleaned) <= 16:
+            return cleaned
+        return f"{cleaned[:8]}\n{cleaned[8:16]}"
+
+    bubble1 = escape_drawtext(_compact(bubbles[0])) if bubbles else ""
+    bubble2 = escape_drawtext(_compact(bubbles[1])) if len(bubbles) > 1 else ""
 
     draw_chain = (
         f"[0:v]drawtext=fontfile='{fontfile}':text='{bubble1}':"
-        "fontcolor=white:fontsize=48:box=1:boxcolor=black@0.25:boxborderw=20:"
-        "x=(w-text_w)/2:y=h*0.72:enable='between(t,1,6)',"
+        "fontcolor=white:fontsize=56:shadowx=2:shadowy=2:shadowcolor=black@0.35:"
+        "x=(w-text_w)/2:y=h*0.70:enable='between(t,1,6)',"
+        f"drawbox=x=iw*0.35:y=ih*0.745:w=iw*0.30:h=4:color=#F5D66C@0.95:t=fill:enable='between(t,1,6)',"
         f"drawtext=fontfile='{fontfile}':text='{bubble2}':"
-        "fontcolor=white:fontsize=48:box=1:boxcolor=black@0.25:boxborderw=20:"
-        "x=(w-text_w)/2:y=h*0.72:enable='between(t,9,14)'[vt]"
+        "fontcolor=white:fontsize=56:shadowx=2:shadowy=2:shadowcolor=black@0.35:"
+        "x=(w-text_w)/2:y=h*0.70:enable='between(t,9,14)',"
+        "drawbox=x=iw*0.35:y=ih*0.745:w=iw*0.30:h=4:color=#F5D66C@0.95:t=fill:enable='between(t,9,14)'[vt]"
     )
 
     command: list[str] = ["ffmpeg", "-y", "-i", str(src_video), "-stream_loop", "-1", "-i", str(bgm_path)]
