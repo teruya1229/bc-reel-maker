@@ -1,0 +1,16 @@
+{
+  "brand_name": "BCサービス",
+  "line_url": "https://lin.ee/tsilra6",
+  "default_cta": "気になる方はLINEで無料相談",
+  "tone": [
+    "やさしい",
+    "清潔感",
+    "子育て家庭向け"
+  ],
+  "colors": {
+    "base_white": "#FFFFFF",
+    "base_beige": "#F6F2EA",
+    "base_gray": "#E5E5E5",
+    "accent_yellow": "#F5D66C"
+  }
+}
