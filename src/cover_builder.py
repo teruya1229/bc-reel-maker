@@ -52,9 +52,15 @@ def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, 
 
 def _shorten_title(title: str) -> str:
     cleaned = (title or "").strip()
+    if "\n" in cleaned:
+        return cleaned
     predefined = {
         "通常分解では落ちない汚れ": "通常分解では\n落ちない汚れ",
         "完全分解ビフォーアフター": "完全分解で\n見える変化",
+        "完全分解でここまで変わる": "完全分解で\nここまで変わる",
+        "分解して丁寧に洗浄": "分解して\n丁寧に洗浄",
+        "作業工程をわかりやすく紹介": "分解して\n丁寧に洗浄",
+        "安心につながる工程の見える化": "作業工程を\n見える化",
     }
     if cleaned in predefined:
         return predefined[cleaned]
