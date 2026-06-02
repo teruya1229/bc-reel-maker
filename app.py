@@ -51,7 +51,10 @@ with st.form("reel_form"):
         type=["jpg", "jpeg", "png", "webp", "mp4", "mov", "avi", "mkv"],
         accept_multiple_files=True,
     )
-    character_file = st.file_uploader("左上キャラ画像 (任意, png推奨)", type=["png", "jpg", "jpeg", "webp"])
+    character_file = st.file_uploader(
+        "解説キャラ素材 (任意, png/jpg/mp4/mov)",
+        type=["png", "jpg", "jpeg", "webp", "mp4", "mov"],
+    )
 
     st.subheader("3) 入力内容プレビュー")
     st.write(f"選択テーマ: **{theme}**")

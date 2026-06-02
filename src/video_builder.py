@@ -12,6 +12,7 @@ VIDEO_W = 1080
 VIDEO_H = 1920
 FPS = 30
 CTA_SLIDE_DURATION = 3.0
+CHAR_VIDEO_SUFFIXES = {".mp4", ".mov", ".m4v", ".avi", ".mkv"}
 
 
 def _run_ffmpeg(command: list[str]) -> None:
@@ -193,13 +194,26 @@ def _overlay_and_mix(
     command: list[str] = ["ffmpeg", "-y", "-i", str(src_video), "-stream_loop", "-1", "-i", str(bgm_path)]
 
     if character_path:
-        command.extend(["-i", str(character_path)])
+        char_is_video = character_path.suffix.lower() in CHAR_VIDEO_SUFFIXES
+        if char_is_video:
+            command.extend(["-stream_loop", "-1", "-i", str(character_path)])
+        elif is_image_file(character_path):
+            command.extend(["-loop", "1", "-i", str(character_path)])
+        else:
+            command.extend(["-i", str(character_path)])
+
+        char_visible_end = max(duration - CTA_SLIDE_DURATION, 0.1)
         filter_complex = (
             f"{draw_chain};"
-            "[2:v]scale=216:-1[char];"
-            "[vt][char]overlay=26:26:enable='between(t,0,{dur})'[vout];"
+            "[vt]drawbox=x=32:y=72:w=232:h=232:color=white@0.42:t=fill[vtbg];"
+            "[2:v]scale=216:-1,setsar=1,fps=30[char];"
+            "[vtbg][char]overlay=40:80:enable='between(t,0,{char_end})'[vout];"
             "[1:a]atrim=0:{dur},afade=t=in:st=0:d=0.8,afade=t=out:st={fade_start}:d=1[aout]"
-        ).format(dur=f"{duration:.2f}", fade_start=max(duration - 1.2, 0.1))
+        ).format(
+            dur=f"{duration:.2f}",
+            char_end=f"{char_visible_end:.2f}",
+            fade_start=max(duration - 1.2, 0.1),
+        )
     else:
         filter_complex = (
             f"{draw_chain};"
